@@ -1,18 +1,23 @@
 import { teams } from "../data/database";
+import { notFound } from "../errors/app-error";
 import type { Team } from "../models";
-
-/**
- * Camada de servico: regras de negocio e acesso aos dados.
- *
- * Nao conhece nada de HTTP -- nao recebe request, nao devolve response, nao sabe
- * o que e status code. Recebe e devolve tipos de dominio. E o que permite testar
- * regra de negocio sem subir servidor.
- */
 
 export function findAllTeams(): Team[] {
   return teams;
 }
 
-export function findTeamById(id: number): Team | undefined {
-  return teams.find((team) => team.id === id);
+/**
+ * Lanca em vez de devolver undefined.
+ *
+ * O controller nao precisa mais decidir o que fazer quando nao acha -- some o if
+ * repetido em cada handler, e fica impossivel esquecer de tratar o caso.
+ */
+export function getTeamById(id: number): Team {
+  const team = teams.find((item) => item.id === id);
+
+  if (!team) {
+    throw notFound("Team", id);
+  }
+
+  return team;
 }

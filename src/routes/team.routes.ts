@@ -1,11 +1,13 @@
 import type { FastifyInstance } from "fastify";
-import { getTeamById, listTeams } from "../controllers/team.controller";
+import { getTeam, listTeams } from "../controllers/team.controller";
+import { idParamSchema } from "../schemas/common.schema";
 
-/**
- * Camada de rotas: so declara o mapa URL -> handler.
- * Olhando este arquivo se sabe toda a superficie da API de times.
- */
 export async function teamRoutes(app: FastifyInstance) {
   app.get("/teams", listTeams);
-  app.get<{ Params: { id: string } }>("/teams/:id", getTeamById);
+
+  app.get<{ Params: { id: number } }>(
+    "/teams/:id",
+    { schema: { params: idParamSchema } },
+    getTeam,
+  );
 }

@@ -1,30 +1,21 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { findAllTeams, findTeamById } from "../services/team.service";
+import { findAllTeams, getTeamById } from "../services/team.service";
 
 /**
- * Camada de controller: a ponte entre HTTP e dominio.
+ * Controllers ficaram menores: nada de Number(), nada de if de 404.
  *
- * Responsabilidade unica -- ler a requisicao, chamar o service, montar a
- * resposta com o status code certo. Nenhuma regra de negocio aqui.
+ * O id ja chega convertido em numero -- o JSON Schema da rota declara
+ * type: integer e o Fastify converte e valida antes do handler. E o "nao achou"
+ * virou responsabilidade do service, que lanca AppError.
  */
 
 export async function listTeams(_request: FastifyRequest, reply: FastifyReply) {
-  const teams = findAllTeams();
-  return reply.code(200).send(teams);
+  return reply.code(200).send(findAllTeams());
 }
 
-export async function getTeamById(
-  request: FastifyRequest<{ Params: { id: string } }>,
+export async function getTeam(
+  request: FastifyRequest<{ Params: { id: number } }>,
   reply: FastifyReply,
 ) {
-  // Number() ainda sem validacao, igual ao original. Isso vira 400 de verdade
-  // no commit 2, quando entrar o JSON Schema.
-  const id = Number(request.params.id);
-  const team = findTeamById(id);
-
-  if (!team) {
-    return reply.code(404).send({ message: "Team not found" });
-  }
-
-  return reply.code(200).send(team);
+  return reply.code(200).send(getTeamById(request.params.id));
 }
