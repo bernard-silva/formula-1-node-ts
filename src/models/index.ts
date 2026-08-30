@@ -4,13 +4,6 @@ export interface Team {
   base: string;
 }
 
-/**
- * O piloto agora aponta para o time por teamId, e nao mais pelo nome em texto.
- *
- * No original o campo era team: "Ferrari". Isso quebra de duas formas: um typo
- * no nome desliga o vinculo em silencio, e renomear um time exige atualizar
- * todos os pilotos. Referenciar por id e o que qualquer banco relacional faria.
- */
 export interface Driver {
   id: number;
   name: string;
@@ -18,7 +11,16 @@ export interface Driver {
   number: number;
 }
 
-/** Filtros aceitos em GET /drivers. */
+/**
+ * Payload de escrita: tudo que um piloto tem, MENOS o id.
+ *
+ * Omit<Driver, "id"> nao e detalhe de estilo -- e o que impede o cliente de
+ * escolher o proprio id. Foi exatamente assim que nasceu o bug de id duplicado
+ * do projeto original: o id vinha escrito no dado. Agora quem gera e a camada
+ * de dados, e duplicidade fica impossivel por construcao.
+ */
+export type DriverInput = Omit<Driver, "id">;
+
 export interface DriverFilters {
   teamId?: number;
   name?: string;

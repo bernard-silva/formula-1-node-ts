@@ -6,12 +6,6 @@ export function findAllTeams(): Team[] {
   return teams;
 }
 
-/**
- * Lanca em vez de devolver undefined.
- *
- * O controller nao precisa mais decidir o que fazer quando nao acha -- some o if
- * repetido em cada handler, e fica impossivel esquecer de tratar o caso.
- */
 export function getTeamById(id: number): Team {
   const team = teams.find((item) => item.id === id);
 
@@ -20,4 +14,9 @@ export function getTeamById(id: number): Team {
   }
 
   return team;
+}
+
+/** Versao que responde sem lancar, para quem so precisa checar existencia. */
+export function teamExists(id: number): boolean {
+  return teams.some((team) => team.id === id);
 }

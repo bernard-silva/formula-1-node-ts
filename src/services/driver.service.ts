@@ -1,12 +1,8 @@
-import { drivers } from "../data/database";
-import { notFound } from "../errors/app-error";
-import type { Driver, DriverFilters, Team } from "../models";
-import { getTeamById } from "./team.service";
+import { drivers, generateDriverId } from "../data/database";
+import { conflict, invalidReference, notFound } from "../errors/app-error";
+import type { Driver, DriverFilters, DriverInput, Team } from "../models";
+import { getTeamById, teamExists } from "./team.service";
 
-/**
- * Filtros aplicados em sequencia: cada um estreita o resultado do anterior.
- * Nenhum filtro informado devolve a lista inteira.
- */
 export function findAllDrivers(filters: DriverFilters = {}): Driver[] {
   let result = drivers;
 
@@ -15,8 +11,6 @@ export function findAllDrivers(filters: DriverFilters = {}): Driver[] {
   }
 
   if (filters.name) {
-    // Busca parcial e sem diferenciar maiuscula: "hamil" acha "Lewis Hamilton".
-    // Quem usa a API nao deveria ter que acertar o nome exato.
     const term = filters.name.trim().toLowerCase();
     result = result.filter((driver) => driver.name.toLowerCase().includes(term));
   }
@@ -34,12 +28,52 @@ export function getDriverById(id: number): Driver {
   return driver;
 }
 
-/**
- * "Qual o time deste piloto" e uma pergunta de dominio, entao vive no service e
- * nao no controller. Reaproveita getTeamById, que ja sabe lancar 404 -- se um
- * piloto apontar para um teamId inexistente, o erro aparece em vez de virar null.
- */
 export function getDriverTeam(driverId: number): Team {
   const driver = getDriverById(driverId);
   return getTeamById(driver.teamId);
+}
+
+export function createDriver(input: DriverInput): Driver {
+  assertTeamExists(input.teamId);
+  assertNumberIsAvailable(input.number);
+
+  const driver: Driver = { id: generateDriverId(), ...input };
+  drivers.push(driver);
+
+  return driver;
+}
+
+export function updateDriver(id: number, input: DriverInput): Driver {
+  const current = getDriverById(id);
+
+  assertTeamExists(input.teamId);
+  // ignoreId permite ao piloto manter o proprio numero. Sem isso, atualizar o
+  // nome de um piloto falharia com 409 por "conflito" com ele mesmo -- um bug
+  // classico de regra de unicidade.
+  assertNumberIsAvailable(input.number, id);
+
+  const updated: Driver = { id: current.id, ...input };
+  drivers[drivers.indexOf(current)] = updated;
+
+  return updated;
+}
+
+export function deleteDriver(id: number): void {
+  const current = getDriverById(id);
+  drivers.splice(drivers.indexOf(current), 1);
+}
+
+function assertTeamExists(teamId: number): void {
+  if (!teamExists(teamId)) {
+    throw invalidReference(`Team with id ${teamId} does not exist`);
+  }
+}
+
+/** Numero de carro e unico no grid. */
+function assertNumberIsAvailable(number: number, ignoreId?: number): void {
+  const owner = drivers.find((driver) => driver.number === number);
+
+  if (owner && owner.id !== ignoreId) {
+    throw conflict(`Car number ${number} is already taken by driver ${owner.id}`);
+  }
 }
