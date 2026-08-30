@@ -1,17 +1,21 @@
 {
-  "name": "formula-one",
+  "name": "formula-1-node-ts",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dist": "tsup src",
-    "start:dev": "tsx --env-file=.env src/server.ts",
-    "start:watch": "tsx watch --env-file=.env  src/server.ts",
-    "start:dist": "npm run dist && node dist/src/index.js"
+  "description": "API REST de Formula 1 em Node.js + TypeScript + Fastify. Evolucao do desafio node-formula-1 da DIO.",
+  "main": "dist/server.js",
+  "engines": {
+    "node": ">=20.6.0"
   },
-  "keywords": [],
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "start": "tsx --env-file=.env src/server.ts",
+    "build": "tsup src/server.ts --format cjs --target node20 --clean",
+    "start:dist": "npm run build && node --env-file=.env dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["nodejs", "typescript", "fastify", "rest-api", "qa", "dio"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.11.30",
     "tsup": "^8.0.2",
