@@ -14,37 +14,74 @@ import { driverBodySchema, listDriversQuerySchema } from "../schemas/driver.sche
 export async function driverRoutes(app: FastifyInstance) {
   app.get<{ Querystring: DriverFilters }>(
     "/drivers",
-    { schema: { querystring: listDriversQuerySchema } },
+    {
+      schema: {
+        tags: ["Drivers"],
+        summary: "Lista pilotos, com filtro opcional por time ou nome",
+        querystring: listDriversQuerySchema,
+      },
+    },
     listDrivers,
   );
 
   app.get<{ Params: { id: number } }>(
     "/drivers/:id",
-    { schema: { params: idParamSchema } },
+    {
+      schema: {
+        tags: ["Drivers"],
+        summary: "Busca um piloto por id",
+        params: idParamSchema,
+      },
+    },
     getDriver,
   );
 
   app.get<{ Params: { id: number } }>(
     "/drivers/:id/team",
-    { schema: { params: idParamSchema } },
+    {
+      schema: {
+        tags: ["Drivers"],
+        summary: "Retorna o time de um piloto",
+        params: idParamSchema,
+      },
+    },
     getDriverTeamById,
   );
 
   app.post<{ Body: DriverInput }>(
     "/drivers",
-    { schema: { body: driverBodySchema } },
+    {
+      schema: {
+        tags: ["Drivers"],
+        summary: "Cria um piloto",
+        body: driverBodySchema,
+      },
+    },
     postDriver,
   );
 
   app.put<{ Params: { id: number }; Body: DriverInput }>(
     "/drivers/:id",
-    { schema: { params: idParamSchema, body: driverBodySchema } },
+    {
+      schema: {
+        tags: ["Drivers"],
+        summary: "Atualiza um piloto por completo",
+        params: idParamSchema,
+        body: driverBodySchema,
+      },
+    },
     putDriver,
   );
 
   app.delete<{ Params: { id: number } }>(
     "/drivers/:id",
-    { schema: { params: idParamSchema } },
+    {
+      schema: {
+        tags: ["Drivers"],
+        summary: "Remove um piloto",
+        params: idParamSchema,
+      },
+    },
     removeDriver,
   );
 }

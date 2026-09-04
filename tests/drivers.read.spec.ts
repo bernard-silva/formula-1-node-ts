@@ -4,7 +4,6 @@ import { resetDatabase } from "../src/data/database";
 import type { Driver } from "../src/models";
 import { buildTestApp } from "./helpers/build-test-app";
 
-
 let app: FastifyInstance;
 
 beforeAll(async () => {
