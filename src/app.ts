@@ -3,18 +3,17 @@ import cors from "@fastify/cors";
 import { registerErrorHandling } from "./plugins/error-handler";
 import { registerRoutes } from "./routes";
 
-export async function buildApp(): Promise<FastifyInstance> {
+export interface BuildAppOptions {
+  /** Desligado nos testes para a saida do Vitest ficar legivel. */
+  logger?: boolean;
+}
+
+export async function buildApp({ logger = true }: BuildAppOptions = {}): Promise<FastifyInstance> {
   const app = fastify({
-    logger: true,
+    logger,
     ajv: {
       customOptions: {
-        // O default do Fastify e removeAdditional: true, que DESCARTA em silencio
-        // campos fora do schema em vez de recusar a requisicao. Combinado com
-        // additionalProperties: false isso significa que o typo do cliente e
-        // apagado e ele recebe 201 achando que salvou. Com false, vira 400.
         removeAdditional: false,
-        // Reporta todas as violacoes de uma vez, nao so a primeira. Quem esta
-        // integrando descobre os tres campos errados numa tentativa.
         allErrors: true,
       },
     },
