@@ -1,0 +1,262 @@
+{
+  "info": {
+    "name": "F1 API - Formula 1 Node + TS",
+    "description": "Testes funcionais da F1 API. Casos de sucesso e cenarios negativos com assertivas. A pasta CRUD executa em ordem e e auto-limpante: o request 05 remove o piloto criado no 01.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3333" },
+    { "key": "driverId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Teams",
+      "item": [
+        {
+          "name": "/teams - lista completa (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/teams", "host": ["{{baseUrl}}"], "path": ["teams"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('retorna 10 times', () => pm.expect(pm.response.json()).to.have.lengthOf(10));"
+          ] } }]
+        },
+        {
+          "name": "/teams/:id - time existente (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/teams/4", "host": ["{{baseUrl}}"], "path": ["teams", "4"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('contrato do time', () => pm.expect(pm.response.json()).to.have.all.keys('id', 'name', 'base'));"
+          ] } }]
+        },
+        {
+          "name": "/teams/:id - time inexistente (404)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/teams/999", "host": ["{{baseUrl}}"], "path": ["teams", "999"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 404', () => pm.response.to.have.status(404));",
+            "pm.test('codigo NOT_FOUND', () => pm.expect(pm.response.json().code).to.eql('NOT_FOUND'));"
+          ] } }]
+        },
+        {
+          "name": "/teams/:id - id nao numerico (400)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/teams/abc", "host": ["{{baseUrl}}"], "path": ["teams", "abc"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));",
+            "pm.test('codigo VALIDATION_ERROR', () => pm.expect(pm.response.json().code).to.eql('VALIDATION_ERROR'));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Drivers - leitura",
+      "item": [
+        {
+          "name": "/drivers - lista completa (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers", "host": ["{{baseUrl}}"], "path": ["drivers"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('ids sao unicos', () => {",
+            "  const ids = pm.response.json().map(d => d.id);",
+            "  pm.expect(new Set(ids).size).to.eql(ids.length);",
+            "});"
+          ] } }]
+        },
+        {
+          "name": "/drivers - filtro por time (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers?teamId=4", "host": ["{{baseUrl}}"], "path": ["drivers"], "query": [{ "key": "teamId", "value": "4" }] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('todos do time 4', () => pm.response.json().forEach(d => pm.expect(d.teamId).to.eql(4)));"
+          ] } }]
+        },
+        {
+          "name": "/drivers - busca por nome (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers?name=hamil", "host": ["{{baseUrl}}"], "path": ["drivers"], "query": [{ "key": "name", "value": "hamil" }] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('encontra Hamilton', () => pm.expect(pm.response.json()[0].name).to.eql('Lewis Hamilton'));"
+          ] } }]
+        },
+        {
+          "name": "/drivers - filtro sem resultado (200, lista vazia)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers?name=zzzz", "host": ["{{baseUrl}}"], "path": ["drivers"], "query": [{ "key": "name", "value": "zzzz" }] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200 e nao 404', () => pm.response.to.have.status(200));",
+            "pm.test('lista vazia', () => pm.expect(pm.response.json()).to.eql([]));"
+          ] } }]
+        },
+        {
+          "name": "/drivers - teamId nao numerico (400)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers?teamId=ferrari", "host": ["{{baseUrl}}"], "path": ["drivers"], "query": [{ "key": "teamId", "value": "ferrari" }] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));"
+          ] } }]
+        },
+        {
+          "name": "/drivers/:id - piloto existente (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers/8", "host": ["{{baseUrl}}"], "path": ["drivers", "8"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('contrato do piloto', () => pm.expect(pm.response.json()).to.have.all.keys('id', 'name', 'teamId', 'number'));"
+          ] } }]
+        },
+        {
+          "name": "/drivers/:id - piloto inexistente (404)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers/999", "host": ["{{baseUrl}}"], "path": ["drivers", "999"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 404', () => pm.response.to.have.status(404));",
+            "pm.test('codigo NOT_FOUND', () => pm.expect(pm.response.json().code).to.eql('NOT_FOUND'));"
+          ] } }]
+        },
+        {
+          "name": "/drivers/:id - id nao numerico (400)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers/abc", "host": ["{{baseUrl}}"], "path": ["drivers", "abc"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));",
+            "pm.test('aponta o campo id', () => pm.expect(pm.response.json().details[0].field).to.eql('id'));"
+          ] } }]
+        },
+        {
+          "name": "/drivers/:id/team - time do piloto (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers/8/team", "host": ["{{baseUrl}}"], "path": ["drivers", "8", "team"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('retorna a Ferrari', () => pm.expect(pm.response.json().name).to.eql('Ferrari'));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Drivers - CRUD (executar em ordem)",
+      "item": [
+        {
+          "name": "01 - cria piloto (201)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Felipe Drugovich\",\n  \"teamId\": 6,\n  \"number\": 34\n}" },
+            "url": { "raw": "{{baseUrl}}/drivers", "host": ["{{baseUrl}}"], "path": ["drivers"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 201', () => pm.response.to.have.status(201));",
+            "pm.test('id gerado e numerico', () => pm.expect(pm.response.json().id).to.be.a('number'));",
+            "pm.test('header Location', () => pm.expect(pm.response.headers.get('location')).to.be.a('string'));",
+            "pm.collectionVariables.set('driverId', pm.response.json().id);"
+          ] } }]
+        },
+        {
+          "name": "02 - confirma criacao (200)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers/{{driverId}}", "host": ["{{baseUrl}}"], "path": ["drivers", "{{driverId}}"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200', () => pm.response.to.have.status(200));",
+            "pm.test('piloto persistido', () => pm.expect(pm.response.json().name).to.eql('Felipe Drugovich'));"
+          ] } }]
+        },
+        {
+          "name": "03 - numero em uso (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Piloto Teste\",\n  \"teamId\": 1,\n  \"number\": 44\n}" },
+            "url": { "raw": "{{baseUrl}}/drivers", "host": ["{{baseUrl}}"], "path": ["drivers"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 409', () => pm.response.to.have.status(409));",
+            "pm.test('codigo CONFLICT', () => pm.expect(pm.response.json().code).to.eql('CONFLICT'));"
+          ] } }]
+        },
+        {
+          "name": "04 - teamId inexistente (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Piloto Teste\",\n  \"teamId\": 999,\n  \"number\": 50\n}" },
+            "url": { "raw": "{{baseUrl}}/drivers", "host": ["{{baseUrl}}"], "path": ["drivers"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));",
+            "pm.test('codigo INVALID_REFERENCE', () => pm.expect(pm.response.json().code).to.eql('INVALID_REFERENCE'));"
+          ] } }]
+        },
+        {
+          "name": "05 - campos obrigatorios ausentes (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/drivers", "host": ["{{baseUrl}}"], "path": ["drivers"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));",
+            "pm.test('lista os 3 campos faltantes', () => pm.expect(pm.response.json().details).to.have.lengthOf(3));"
+          ] } }]
+        },
+        {
+          "name": "06 - campo extra no body (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Piloto Teste\",\n  \"teamId\": 1,\n  \"number\": 50,\n  \"championships\": 3\n}" },
+            "url": { "raw": "{{baseUrl}}/drivers", "host": ["{{baseUrl}}"], "path": ["drivers"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 400 - campo extra recusado, nao ignorado', () => pm.response.to.have.status(400));"
+          ] } }]
+        },
+        {
+          "name": "07 - numero fora da faixa (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Piloto Teste\",\n  \"teamId\": 1,\n  \"number\": 150\n}" },
+            "url": { "raw": "{{baseUrl}}/drivers", "host": ["{{baseUrl}}"], "path": ["drivers"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 400', () => pm.response.to.have.status(400));",
+            "pm.test('aponta o campo number', () => pm.expect(pm.response.json().details[0].field).to.eql('number'));"
+          ] } }]
+        },
+        {
+          "name": "08 - atualiza mantendo o proprio numero (200)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Felipe Drugovich Jr\",\n  \"teamId\": 6,\n  \"number\": 34\n}" },
+            "url": { "raw": "{{baseUrl}}/drivers/{{driverId}}", "host": ["{{baseUrl}}"], "path": ["drivers", "{{driverId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 200 - nao conflita com ele mesmo', () => pm.response.to.have.status(200));",
+            "pm.test('nome atualizado', () => pm.expect(pm.response.json().name).to.eql('Felipe Drugovich Jr'));"
+          ] } }]
+        },
+        {
+          "name": "09 - remove piloto (204)",
+          "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/drivers/{{driverId}}", "host": ["{{baseUrl}}"], "path": ["drivers", "{{driverId}}"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 204', () => pm.response.to.have.status(204));",
+            "pm.test('corpo vazio', () => pm.expect(pm.response.text()).to.be.empty);"
+          ] } }]
+        },
+        {
+          "name": "10 - confirma remocao (404)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/drivers/{{driverId}}", "host": ["{{baseUrl}}"], "path": ["drivers", "{{driverId}}"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 404', () => pm.response.to.have.status(404));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Aplicacao",
+      "item": [
+        {
+          "name": "/pilotos - rota inexistente (404)",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/pilotos", "host": ["{{baseUrl}}"], "path": ["pilotos"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('status 404', () => pm.response.to.have.status(404));",
+            "pm.test('codigo ROUTE_NOT_FOUND', () => pm.expect(pm.response.json().code).to.eql('ROUTE_NOT_FOUND'));"
+          ] } }]
+        }
+      ]
+    }
+  ]
+}
