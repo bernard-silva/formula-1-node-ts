@@ -178,7 +178,9 @@ O `.env` declarava `PORT=3333` e o script passava `--env-file=.env`, mas o códi
 
 ## Estratégia de testes
 
-25 casos em quatro arquivos, todos via `app.inject()`.
+Dois níveis: **30 casos automatizados** com Vitest e **24 requests com 46 assertivas** na coleção do Postman.
+
+Os 30 do Vitest ficam em quatro arquivos, todos via `app.inject()`.
 
 ```
 tests/
@@ -198,13 +200,21 @@ tests/
 
 **Testes apoiados no `code`, nunca na `message`.** Mensagem é texto para humano e pode ser reescrita a qualquer momento; código é contrato. Teste amarrado em mensagem quebra em toda melhoria de texto — e aí a equipe começa a ignorar teste vermelho.
 
-**Coleção do Postman** em `docs/`, com assertivas em cada request e o fluxo de CRUD encadeado por variável de coleção. Importável e executável pelo Collection Runner.
+**Coleção do Postman** em `docs/`: **24 requests com 46 assertivas**, organizados em quatro pastas (times, leitura de pilotos, CRUD e aplicação). O fluxo de CRUD é encadeado por variável de coleção e auto-limpante — o request que remove o piloto desfaz o que o primeiro criou, então a coleção pode rodar quantas vezes for preciso sem reiniciar o servidor.
+
+Roda de três formas: pelo Collection Runner do Postman, localmente com `npm run test:api`, e no CI a cada push. Os arquivos de environment estão em `docs/environments/` — importe o `local` junto com a coleção para rodar na sua máquina.
+
+Os dois níveis se complementam em vez de se sobrepor. Os testes do Vitest rodam em memória e verificam a aplicação isolada; a coleção do Postman roda contra um servidor de verdade, pela rede, e é o que valida que a API sobe, escuta na porta certa e responde a um cliente HTTP externo.
 
 ---
 
 ## Integração contínua
 
-`.github/workflows/ci.yml` roda em todo push e pull request: instala com `npm ci`, verifica tipagem com `tsc --noEmit` e executa a suíte. Erro de tipo reprova antes de qualquer teste rodar.
+`.github/workflows/ci.yml` roda em todo push e pull request, em dois jobs:
+
+**`test`** — instala com `npm ci`, verifica tipagem com `tsc --noEmit` e executa a suíte do Vitest. Erro de tipo reprova antes de qualquer teste rodar.
+
+**`api-tests`** — sobe a API de verdade, aguarda a porta responder e executa os 24 requests da coleção do Postman com Newman, publicando o relatório JUnit como artefato. Depende do job anterior: se o básico está quebrado, não faz sentido subir o servidor para descobrir a mesma coisa mais devagar.
 
 ---
 
@@ -221,10 +231,6 @@ tests/
 
 ## Créditos
 
-
 Desafio proposto pela [Digital Innovation One](https://www.dio.me/) — projeto base em [`digitalinnovationone/node-formula-1`](https://github.com/digitalinnovationone/node-formula-1).
-
-Desenvolvido por **Bernard Silva** como projeto de portfólio, com o código CRUD 
-gerado com auxílio do Claude (Anthropic) e a suíte de testes escrita manualmente como desafio de QA e suporte do Claude.
 
 Dados dos times e pilotos são ilustrativos, baseados na temporada de 2025.
