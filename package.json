@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:api": "npx --yes newman@6 run docs/f1-api.postman_collection.json -e docs/environments/local.postman_environment.json"
   },
   "keywords": [
     "nodejs",
