@@ -12,13 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Configura Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: npm
 
       - name: Instala dependencias
@@ -33,33 +31,25 @@ jobs:
   api-tests:
     name: Testes de API (Newman)
     runs-on: ubuntu-latest
-    # Roda depois da suite unitaria: se o basico esta quebrado, nao faz sentido
-    # subir o servidor para descobrir a mesma coisa mais devagar.
     needs: test
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Configura Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: npm
 
       - name: Instala dependencias
         run: npm ci
 
-      # O .env nao esta versionado (e nem deveria). O script de start usa
-      # --env-file=.env, que falha se o arquivo nao existir.
       - name: Prepara variaveis de ambiente
         run: cp .env.example .env
 
       - name: Sobe a API em background
         run: npm start &
 
-      # Sem esta espera o Newman dispara antes de a porta estar aceitando
-      # conexao e o job falha por motivo que nao tem nada a ver com a API.
       - name: Aguarda a API responder
         run: |
           for i in $(seq 1 30); do
